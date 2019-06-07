@@ -5,7 +5,7 @@
  */
 
 import EffectProvider from "./EffectProvider";
-import getParticleConfig from "./particleConfig";
+import getParticleConfig from "../config/particleConfig";
 
 export default class ParticleEffect extends EffectProvider {
     constructor (context) {

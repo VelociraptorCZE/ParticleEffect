@@ -4,7 +4,7 @@
  * MIT License
  */
 
-import Random from "./Random";
+import Random from "../service/Random";
 
 export default class EffectProvider {
     constructor () {

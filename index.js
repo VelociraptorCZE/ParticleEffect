@@ -4,6 +4,6 @@
  * MIT License
  */
 
-import ParticleEffect from "./ParticleEffect";
+import ParticleEffect from "./core/ParticleEffect";
 
 export default ParticleEffect;
