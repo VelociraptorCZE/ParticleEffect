@@ -24,7 +24,7 @@ export default class ParticleEffect extends EffectProvider {
     }
 
     create () {
-        this.particleConfig = getParticleConfig(this.options.type);
+        this.adjustConfig();
         this._renderCallbackIsCallable = true;
         if (!this._renderInitiated) {
             this._renderInitiated = true;
@@ -44,6 +44,10 @@ export default class ParticleEffect extends EffectProvider {
         this._onDestroyCalled = true;
     }
 
+    adjustConfig () {
+        this.particleConfig = getParticleConfig(this.options.type);
+    }
+
     _renderSequence () {
         return requestAnimationFrame(() => {
             this._render();
@@ -52,13 +56,11 @@ export default class ParticleEffect extends EffectProvider {
     }
 
     _render () {
-        const { context, random, _renderCallbackIsCallable,
-            options: { color, clearCanvasOnRender, onRender = () => {} }
-        } = this;
+        const { context, random, _renderCallbackIsCallable, options: { clearCanvasOnRender, onRender = () => {} } } = this;
 
         try {
             context.save();
-            context.fillStyle = color || "#000";
+            this._setCanvasFillColor();
             if (clearCanvasOnRender) {
                 const { width, height } = context.canvas;
                 context.clearRect(0, 0, width, height);
@@ -73,13 +75,19 @@ export default class ParticleEffect extends EffectProvider {
             context.restore();
         }
         catch (e) {
-            console.warn(`Effect emitting was stopped because of ${e}.`);
+            if (_renderCallbackIsCallable) {
+                console.warn(`Effect emitting was stopped because of ${e}.`);
+            }
             this.destroy();
         }
     }
 
+    _setCanvasFillColor () {
+        this.context.fillStyle = this.options.color || "#000";
+    }
+
     _createParticle () {
-        const { random, particles, particleConfig, options: { radius, particleLifespan } } = this;
+        const { random, particles, particleConfig, context: { canvas }, options: { radius, particleLifespan } } = this;
 
         if (particleConfig.particlesToCreate === 0) {
             if (!this.particles.length) {
@@ -87,6 +95,8 @@ export default class ParticleEffect extends EffectProvider {
             }
             return;
         }
+
+        const randomXBounds = particleConfig.useFullCanvasWidth ? [0, canvas.width] : [-18, 18];
 
         particleConfig.particlesToCreate--;
 
@@ -96,29 +106,39 @@ export default class ParticleEffect extends EffectProvider {
                 radius: radius || particleConfig.defaultRadius,
                 alpha: .6,
                 blur: particleConfig.blur,
-                x: random.next(-18, 18),
+                x: random.next(...randomXBounds),
                 y: random.next(-10, -15)
             }
         );
     }
 
     _renderAllParticles () {
-        const { context, particles, _refreshTime, options: { coords: [x, y] } } = this;
+        const { context, particles, _refreshTime } = this;
         this.particles = particles.filter(particle => {
             const { filter } = context;
-            particle.lifespan -= _refreshTime;
             particle = this._getParticle(particle);
+            particle.lifespan -= _refreshTime;
+            context.globalAlpha = particle.alpha;
+            this._renderParticle(particle);
+            context.filter = filter;
+            return particle.lifespan > 0;
+        });
+    }
+
+    _renderParticle (particle) {
+        const { particleConfig, context, options: { coords: [x, y] } } = this;
+        if (particleConfig.image) {
+            context.drawImage(particleConfig.image, x + particle.x, y + particle.y);
+        }
+        else {
             if (particle.blur) {
                 context.filter = `blur(${particle.blur}px)`;
             }
-            context.globalAlpha = particle.alpha;
             context.beginPath();
             context.arc(x + particle.x, y + particle.y, particle.radius, 0, Math.PI * 2);
             context.fill();
             context.closePath();
-            context.filter = filter;
-            return particle.lifespan > 0;
-        });
+        }
     }
 
     _getParticle (particle) {

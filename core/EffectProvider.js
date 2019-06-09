@@ -28,15 +28,22 @@ export default class EffectProvider {
 
     fireEffect (particle) {
         const { random } = this;
-        const alphaDecrease = random.nextFloat(.005, .01);
-
         particle.y -= random.nextFloat(1, 3);
         particle.x += random.nextFloat(-1.5, 1.5);
+
+        const alphaDecrease = random.nextFloat(.005, .01);
         if (particle.alpha > alphaDecrease) {
             particle.alpha -= alphaDecrease;
         }
 
         particle.radius -= random.nextFloat(.05, .075);
+        return particle;
+    }
+
+    snowEffect (particle) {
+        const { random } = this;
+        particle.y += random.nextFloat(2, 7);
+        particle.x += random.nextFloat(-1.5, 1.5);
         return particle;
     }
 }

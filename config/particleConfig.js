@@ -4,6 +4,8 @@
  * MIT License
  */
 
+import snowflake from "../svg/snowflake";
+
 const particleConfig = Object.freeze({
     explosion: {
         particlesToCreate: 3,
@@ -15,6 +17,12 @@ const particleConfig = Object.freeze({
         particlesToCreate: 200,
         defaultRadius: 10,
         lifespan: 1500
+    },
+    snow: {
+        particlesToCreate: 2000,
+        image: snowflake,
+        lifespan: 4000,
+        useFullCanvasWidth: true
     }
 });
 
