@@ -5,7 +5,7 @@
  */
 
 interface ParticleEffect {
-    setOptions(target: ParticleEffectOptions): void,
+    setOptions(target: ParticleEffectOptions | object): void,
     create(): void,
     destroy(): void,
     adjustConfig(): void,
