@@ -23,6 +23,12 @@ const particleConfig = Object.freeze({
         image: snowflake,
         lifespan: 4000,
         useFullCanvasWidth: true
+    },
+    rain: {
+        particlesToCreate: 2000,
+        lifespan: 2000,
+        defaultRadius: 1,
+        useFullCanvasWidth: true
     }
 });
 

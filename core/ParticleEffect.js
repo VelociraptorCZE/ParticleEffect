@@ -59,8 +59,6 @@ export default class ParticleEffect extends EffectProvider {
         const { context, random, _renderCallbackIsCallable, options: { clearCanvasOnRender, onRender = () => {} } } = this;
 
         try {
-            context.save();
-            this._setCanvasFillColor();
             if (clearCanvasOnRender) {
                 const { width, height } = context.canvas;
                 context.clearRect(0, 0, width, height);
@@ -72,7 +70,6 @@ export default class ParticleEffect extends EffectProvider {
                 this._createParticle();
             }
             this._renderAllParticles();
-            context.restore();
         }
         catch (e) {
             if (_renderCallbackIsCallable) {
@@ -82,8 +79,17 @@ export default class ParticleEffect extends EffectProvider {
         }
     }
 
-    _setCanvasFillColor () {
-        this.context.fillStyle = this.options.color || "#000";
+    _setCanvasFillColor (color) {
+        this.context.fillStyle = color || this.options.color || "#000";
+    }
+
+    _getParticleColor () {
+        let { random, options: { color, colors = [] } } = this;
+        if (Array.isArray(colors) && colors.length > 0) {
+            const randomId = random.next(0, colors.length - 1);
+            color = colors[randomId];
+        }
+        return color;
     }
 
     _createParticle () {
@@ -105,6 +111,7 @@ export default class ParticleEffect extends EffectProvider {
                 lifespan: particleLifespan || particleConfig.lifespan || 500,
                 radius: radius || particleConfig.defaultRadius,
                 alpha: .6,
+                color: this._getParticleColor(),
                 blur: particleConfig.blur,
                 x: random.next(...randomXBounds),
                 y: random.next(-10, -15)
@@ -115,25 +122,24 @@ export default class ParticleEffect extends EffectProvider {
     _renderAllParticles () {
         const { context, particles, _refreshTime } = this;
         this.particles = particles.filter(particle => {
-            const { filter } = context;
+            context.save();
             particle = this._getParticle(particle);
             particle.lifespan -= _refreshTime;
             context.globalAlpha = particle.alpha;
             this._renderParticle(particle);
-            context.filter = filter;
+            context.restore();
             return particle.lifespan > 0;
         });
     }
 
     _renderParticle (particle) {
         const { particleConfig, context, options: { coords: [x, y] } } = this;
+        this._setCanvasFillColor(particle.color);
         if (particleConfig.image) {
             context.drawImage(particleConfig.image, x + particle.x, y + particle.y);
         }
         else {
-            if (particle.blur) {
-                context.filter = `blur(${particle.blur}px)`;
-            }
+            context.filter = `blur(${particle.blur}px)`;
             context.beginPath();
             context.arc(x + particle.x, y + particle.y, particle.radius, 0, Math.PI * 2);
             context.fill();

@@ -46,4 +46,11 @@ export default class EffectProvider {
         particle.x += random.nextFloat(-1.5, 1.5);
         return particle;
     }
+
+    rainEffect (particle) {
+        const { random } = this;
+        particle.y += random.nextFloat(6, 12);
+        particle.x += 1.5;
+        return particle;
+    }
 }

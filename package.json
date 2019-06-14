@@ -1,11 +1,12 @@
 {
   "name": "particleeffect",
-  "version": "0.8.2",
+  "version": "0.8.5",
   "authors": [
     {
       "name": "Simon Raichl",
       "homepage": "https://github.com/velociraptorcze"
     }
   ],
+  "typings": "./core/ParticleEffects.d.ts",
   "license": "MIT"
 }
