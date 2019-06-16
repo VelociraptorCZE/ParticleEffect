@@ -29,22 +29,22 @@ class SomeClass {
 
 In this library you have four methods which you need for creating your effects.
 
-## setOptions(target: ParticleEffectOptions)
+### setOptions(target: ParticleEffectOptions)
 
 With this method you can specify options for your effect. You can define following parameters:
 
-<ul>
-    <li>callOnDestroyOnce: true | false</li>
-    <li>clearCanvasOnRender: true | false</li>
-    <li>color: string</li>
-    <li>colors: Array<string></li>
-    <li>coords: Array<number></li>
-    <li>onDestroy: () => {}</li>
-    <li>onRender: (context) => {}</li>
-    <li>radius: number</li>
-    <li>particleLifespan: number</li>
-    <li>type: "explosion" | "fire" | "snow" | "rain" | string</li>
-</ul>
+- alphaDecrease: Array<number>
+- callOnDestroyOnce: true | false
+- clearCanvasOnRender: true | false
+- color: string
+- colors: Array<string>
+- coords: Array<number>
+- onCreate: () => {}
+- onDestroy: () => {}
+- onRender: (context) => {}
+- radius: number
+- particleLifespan: number
+- type: "explosion" | "fire" | "snow" | "rain" | string"
 
 #### Important properties
 
@@ -63,7 +63,7 @@ particleEffect.setOptions({
 ```
 
 In property **type** you can set a sequence for particular effect. 
-At this point (version 0.8.5) you can choose from four 
+At this point you can choose from four native
 effect types, which are already mentioned higher.
 
 ```js
@@ -121,7 +121,7 @@ particleEffect.setOptions({
 });
 ```
 
-## create()
+### create()
 
 This function simply starts to emit particles for your current effect with respective settings.
 
@@ -147,11 +147,11 @@ particleEffect.setOptions({
 particleEffect.create();
 ```
 
-## destroy()
+### destroy()
 
 This function instantly destroys any remaining particles.
 
-## adjustConfig()
+### adjustConfig()
 
 This function is called internally on every **create()** call and adjusts config for current effect type, 
 however you can also use to your advantage.
@@ -182,3 +182,62 @@ setTimeout(() => {
 Without calling this function your effect would behave like fire 
 so use this function when you want to dynamically
 change effect type.
+
+### defineOwnEffect(target: OwnEffectOptions)
+
+Since version 0.9.0 you can create your own effects. You need to define these three fundamental properties:
+
+- type as string
+- config as object
+- callback as function
+
+Type can be whatever string, config need to be an object, you can define these properties: 
+
+- particlesToCreate: number
+- defaultRadius: number
+- lifespan: number
+- blur: number
+- image: HTMLImageElement
+- useFullCanvasWidth: true | false
+
+Callback is called on every frame for every particle. 
+You can define movement for you particle or whatever else you want.
+It's possible to define two parameters for your callback, first is the particle you want to manipulate with and
+the second is the internal instance of class Random.
+
+```js
+const showerEffect = new ParticleEffect(context);
+showerEffect.defineOwnEffect({
+    type: "shower",
+    config: {
+        lifespan: 750,
+        defaultRadius: 5,
+        particlesToCreate: 200
+    },
+    callback: (streamParticle, random) => {
+        streamParticle.x += random.next(2, 10);
+        streamParticle.y += random.next(2, 10);
+        const alphaDecrease = random.nextFloat(.005, .025);
+        if (streamParticle.alpha > alphaDecrease) {
+            streamParticle.alpha -= alphaDecrease;
+        }
+        return streamParticle;
+    }
+});
+
+showerEffect.setOptions({
+    type: "shower",
+    coords: [128, 600],
+    colors: ["#4ec5ff", "#9cdbff"]
+});
+
+showerEffect.create();
+```
+
+### deleteOwnEffect(type: string)
+
+You can remove your effects using this function.
+
+```js
+showerEffect.deleteOwnEffect("shower");
+```

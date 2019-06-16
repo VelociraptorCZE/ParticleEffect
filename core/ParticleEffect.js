@@ -6,6 +6,7 @@
 
 import EffectProvider from "./EffectProvider";
 import getParticleConfig from "../config/particleConfig";
+import getEffectCallbackName from "../service/getEffectCallbackName";
 
 export default class ParticleEffect extends EffectProvider {
     constructor (context) {
@@ -14,6 +15,7 @@ export default class ParticleEffect extends EffectProvider {
         this.context = context;
         this.particles = [];
         this.options = {};
+        this._ownEffects = {};
     }
 
     setOptions (target = {}) {
@@ -24,12 +26,14 @@ export default class ParticleEffect extends EffectProvider {
     }
 
     create () {
+        const { onCreate = () => {} } = this.options;
         this.adjustConfig();
         this._renderCallbackIsCallable = true;
         if (!this._renderInitiated) {
             this._renderInitiated = true;
             this._renderSequence();
         }
+        onCreate();
     }
 
     destroy () {
@@ -45,7 +49,22 @@ export default class ParticleEffect extends EffectProvider {
     }
 
     adjustConfig () {
-        this.particleConfig = getParticleConfig(this.options.type);
+        const { type } = this.options;
+        this.particleConfig = this._ownEffects[type] || getParticleConfig(type);
+    }
+
+    defineOwnEffect ({ type, config = {}, callback = () => {} } = {}) {
+        if (typeof type !== "string") {
+            console.warn(`Name must be type of string, type given: ${type}!`);
+            return false;
+        }
+        this._ownEffects[type] = config;
+        this[getEffectCallbackName(type)] = callback;
+        return true;
+    }
+
+    deleteOwnEffect (type) {
+        return delete this._ownEffects[type] && delete this[getEffectCallbackName(type)];
     }
 
     _renderSequence () {
@@ -125,7 +144,6 @@ export default class ParticleEffect extends EffectProvider {
             context.save();
             particle = this._getParticle(particle);
             particle.lifespan -= _refreshTime;
-            context.globalAlpha = particle.alpha;
             this._renderParticle(particle);
             context.restore();
             return particle.lifespan > 0;
@@ -135,6 +153,7 @@ export default class ParticleEffect extends EffectProvider {
     _renderParticle (particle) {
         const { particleConfig, context, options: { coords: [x, y] } } = this;
         this._setCanvasFillColor(particle.color);
+        context.globalAlpha = particle.alpha;
         if (particleConfig.image) {
             context.drawImage(particleConfig.image, x + particle.x, y + particle.y);
         }
@@ -149,7 +168,7 @@ export default class ParticleEffect extends EffectProvider {
 
     _getParticle (particle) {
         try {
-            return this[`${this.options.type}Effect`](particle);
+            return this[getEffectCallbackName(this.options.type)](particle, this.random);
         }
         catch (e) {}
         return particle;
